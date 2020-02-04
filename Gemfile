@@ -35,6 +35,8 @@ gem 'puma'
 gem 'line-bot-api'
 gem 'sinatra'
 
+gem 'dotenv'
+
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
 
