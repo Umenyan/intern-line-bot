@@ -26,7 +26,7 @@ class WebhookController < ApplicationController
         when Line::Bot::Event::MessageType::Text
           message = {
             type: 'text',
-            text: event.message['text']
+            text: generate_massage(event.message['text'].downcase)
           }
           client.reply_message(event['replyToken'], message)
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
@@ -37,5 +37,16 @@ class WebhookController < ApplicationController
       end
     }
     head :ok
+  end
+
+  def generate_message(text)
+    case text
+    when "ねこ", "猫", "ネコ", "neko", "NEKO", "cat", "CAT"
+      return "にゃんにゃん"
+    when "いぬ", "犬", "イヌ", "inu", "INU", "dog", "DOG"
+      return "わんわん"
+    else
+      return "もふもふ"
+    end
   end
 end
