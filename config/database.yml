@@ -17,13 +17,16 @@
 default: &default
   adapter: postgresql
   encoding: unicode
+  host: ENV["DATABASE_HOST"]
   # For details on connection pooling, see rails configuration guide
   # http://guides.rubyonrails.org/configuring.html#database-pooling
   pool: 5
 
 development:
   <<: *default
-  database: ruby-getting-started_development
+  database: ENV["DATABASE_NAME"]
+  username: ENV["DATABASE_USER_NAME"]
+  password: ENV["DATABASE_USER_PASSWORD"]
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.

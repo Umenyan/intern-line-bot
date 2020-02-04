@@ -53,6 +53,7 @@ GEM
     coffee-script-source (1.12.2)
     concurrent-ruby (1.1.5)
     crass (1.0.4)
+    dotenv (2.7.5)
     erubi (1.8.0)
     execjs (2.7.0)
     ffi (1.11.1)
@@ -170,6 +171,7 @@ PLATFORMS
 
 DEPENDENCIES
   coffee-rails
+  dotenv
   jbuilder
   jquery-rails
   line-bot-api
