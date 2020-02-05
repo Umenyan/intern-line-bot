@@ -33,7 +33,7 @@ class WebhookController < ApplicationController
               type: 'text',
               text: generate_message(text)
             },
-            get_image_url(text)
+            get_line_image_hash(text)
           ]
           client.reply_message(event['replyToken'], messages)
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
@@ -57,7 +57,7 @@ class WebhookController < ApplicationController
     end
   end
 
-  def get_image_url(text)
+  def call_bing_image_search_api(text)
     uri  = "https://api.cognitive.microsoft.com"
     path = "/bing/v7.0/images/search"
     
@@ -70,14 +70,25 @@ class WebhookController < ApplicationController
         http.request(request)
     end
 
-    parsed_json = JSON.parse(response.body)
-    originalContentUrl = parsed_json["value"][0]["contentUrl"]
-    previewImageUrl = parsed_json["value"][0]["thumbnailUrl"]
+    return JSON.parse(response.body)
+  end
+
+  def get_line_image_hash(text)
+    parsed_json = call_bing_image_search_api(text)
+
+    random_result = parsed_json["value"].sample
+    
+    originalContentUrl = random_result["contentUrl"]
+    previewImageUrl = random_result["thumbnailUrl"]
 
     return {
       type: 'image',
-      originalContentUrl: originalContentUrl,
-      previewImageUrl: previewImageUrl
+      originalContentUrl: replace_to_https(originalContentUrl),
+      previewImageUrl: replace_to_https(previewImageUrl) + "&c=4&w=240&h=240"
     }
+  end
+
+  def replace_to_https(url)
+    return url.sub(/http:/, "https:")
   end
 end
