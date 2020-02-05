@@ -1,4 +1,7 @@
 require 'line/bot'
+require 'net/https'
+require 'uri'
+require 'json'
 
 class WebhookController < ApplicationController
   protect_from_forgery except: [:callback] # CSRF対策無効化
@@ -24,11 +27,15 @@ class WebhookController < ApplicationController
       when Line::Bot::Event::Message
         case event.type
         when Line::Bot::Event::MessageType::Text
-          message = {
-            type: 'text',
-            text: generate_massage(event.message['text'].downcase)
-          }
-          client.reply_message(event['replyToken'], message)
+          text = event.message['text'].downcase
+          messages = [
+            {
+              type: 'text',
+              text: generate_message(text)
+            },
+            get_image_url(text)
+          ]
+          client.reply_message(event['replyToken'], messages)
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
           response = client.get_message_content(event.message['id'])
           tf = Tempfile.open("content")
@@ -48,5 +55,29 @@ class WebhookController < ApplicationController
     else
       return "もふもふ"
     end
+  end
+
+  def get_image_url(text)
+    uri  = "https://api.cognitive.microsoft.com"
+    path = "/bing/v7.0/images/search"
+    
+    uri = URI(uri + path + "?q=" + URI.escape(text))
+    
+    request = Net::HTTP::Get.new(uri)
+    request['Ocp-Apim-Subscription-Key'] = ENV["BING_IMAGE_API_KEY"]
+
+    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
+        http.request(request)
+    end
+
+    parsed_json = JSON.parse(response.body)
+    originalContentUrl = parsed_json["value"][0]["contentUrl"]
+    previewImageUrl = parsed_json["value"][0]["thumbnailUrl"]
+
+    return {
+      type: 'image',
+      originalContentUrl: originalContentUrl,
+      previewImageUrl: previewImageUrl
+    }
   end
 end
