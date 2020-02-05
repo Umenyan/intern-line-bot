@@ -29,11 +29,8 @@ class WebhookController < ApplicationController
         when Line::Bot::Event::MessageType::Text
           text = event.message['text'].downcase
           messages = [
-            {
-              type: 'text',
-              text: generate_message(text)
-            },
-            get_line_image_hash(text)
+            generate_line_text_hash(text),
+            generate_line_image_hash(text)
           ]
           client.reply_message(event['replyToken'], messages)
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
@@ -48,13 +45,20 @@ class WebhookController < ApplicationController
 
   def generate_message(text)
     case text
-    when "ねこ", "猫", "ネコ", "neko", "NEKO", "cat", "CAT"
+    when "ねこ", "猫", "ネコ", "neko","cat"
       return "にゃんにゃん"
-    when "いぬ", "犬", "イヌ", "inu", "INU", "dog", "DOG"
+    when "いぬ", "犬", "イヌ", "inu", "dog"
       return "わんわん"
     else
       return "もふもふ"
     end
+  end
+
+  def generate_line_text_hash(text)
+    return {
+      type: 'text',
+      text: generate_message(text)
+    }
   end
 
   def call_bing_image_search_api(text)
@@ -73,7 +77,7 @@ class WebhookController < ApplicationController
     return JSON.parse(response.body)
   end
 
-  def get_line_image_hash(text)
+  def generate_line_image_hash(text)
     parsed_json = call_bing_image_search_api(text)
 
     random_result = parsed_json["value"].sample
