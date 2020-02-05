@@ -89,7 +89,7 @@ class WebhookController < ApplicationController
   def generate_line_text_hash_when_image_not_found
     return {
         type: 'text',
-        text: "ごめんね…見つからなかったみたい"
+        text: "ごめんね #{0x100098.chr('UTF-8')} \n 見つからなかったみたい…"
       }
   end
 
