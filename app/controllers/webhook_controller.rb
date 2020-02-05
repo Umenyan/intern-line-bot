@@ -79,17 +79,25 @@ class WebhookController < ApplicationController
 
   def generate_line_image_hash(text)
     parsed_json = call_bing_image_search_api(text)
+    json_values = parsed_json["value"]
 
-    random_result = parsed_json["value"].sample
-    
-    originalContentUrl = random_result["contentUrl"]
-    previewImageUrl = random_result["thumbnailUrl"]
+    if json_values.blank?
+      return {
+        type: 'text',
+        text: "ごめんね…見つからなかったみたい"
+      }
+    else
+      random_result = json_values.sample
+      
+      originalContentUrl = random_result["contentUrl"]
+      previewImageUrl = random_result["thumbnailUrl"]
 
-    return {
-      type: 'image',
-      originalContentUrl: replace_to_https(originalContentUrl),
-      previewImageUrl: replace_to_https(previewImageUrl) + "&c=4&w=240&h=240"
-    }
+      return {
+        type: 'image',
+        originalContentUrl: replace_to_https(originalContentUrl),
+        previewImageUrl: replace_to_https(previewImageUrl) + "&c=4&w=240&h=240"
+      }
+    end
   end
 
   def replace_to_https(url)
