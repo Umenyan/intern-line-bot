@@ -27,12 +27,8 @@ class WebhookController < ApplicationController
       when Line::Bot::Event::Message
         case event.type
         when Line::Bot::Event::MessageType::Text
-          text = event.message['text'].downcase
-          messages = [
-            generate_line_text_hash(text),
-            generate_line_image_hash(text)
-          ]
-          client.reply_message(event['replyToken'], messages)
+          input_text = event.message['text'].downcase
+          client.reply_message(event['replyToken'], generate_line_massage_array(input_text))
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
           response = client.get_message_content(event.message['id'])
           tf = Tempfile.open("content")
@@ -65,7 +61,7 @@ class WebhookController < ApplicationController
     uri  = "https://api.cognitive.microsoft.com"
     path = "/bing/v7.0/images/search"
     
-    uri = URI(uri + path + "?q=" + URI.escape(text))
+    uri = URI("#{uri}#{path}?q=#{URI.escape(text)}")
     
     request = Net::HTTP::Get.new(uri)
     request['Ocp-Apim-Subscription-Key'] = ENV["BING_IMAGE_API_KEY"]
@@ -77,26 +73,32 @@ class WebhookController < ApplicationController
     return JSON.parse(response.body)
   end
 
-  def generate_line_image_hash(text)
-    parsed_json = call_bing_image_search_api(text)
-    json_values = parsed_json["value"]
+  def generate_line_image_hash(json)
+    random_result = json.sample
+    
+    originalContentUrl = random_result["contentUrl"]
+    previewImageUrl = random_result["thumbnailUrl"]
 
-    if json_values.blank?
-      return {
+    return {
+      type: 'image',
+      originalContentUrl: replace_to_https(originalContentUrl),
+      previewImageUrl: replace_to_https(previewImageUrl) + "&c=4&w=240&h=240"
+    }
+  end
+
+  def generate_line_text_hash_when_image_not_found
+    return {
         type: 'text',
         text: "ごめんね…見つからなかったみたい"
       }
-    else
-      random_result = json_values.sample
-      
-      originalContentUrl = random_result["contentUrl"]
-      previewImageUrl = random_result["thumbnailUrl"]
+  end
 
-      return {
-        type: 'image',
-        originalContentUrl: replace_to_https(originalContentUrl),
-        previewImageUrl: replace_to_https(previewImageUrl) + "&c=4&w=240&h=240"
-      }
+  def generate_line_massage_array(text)
+    json_value = call_bing_image_search_api(text)["value"]
+    if json_value.blank?
+      return generate_line_text_hash_when_image_not_found
+    else
+      return [generate_line_text_hash(text), generate_line_image_hash(json_value)]
     end
   end
 
