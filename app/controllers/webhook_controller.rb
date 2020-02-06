@@ -95,10 +95,18 @@ class WebhookController < ApplicationController
       }
   end
 
+  def generate_line_sticker_hash(packageId, stickerId)
+    return{
+      type: 'sticker',
+      packageId: packageId,
+      stickerId: stickerId
+    }
+  end
+
   def generate_line_massage_array(input_text)
     json_value = call_bing_image_search_api(input_text)["value"]
     if json_value.blank?
-      return generate_line_text_hash_when_image_not_found(input_text)
+      return [generate_line_text_hash_when_image_not_found(input_text), generate_line_sticker_hash(11539, 52114110)]
     else
       return generate_line_image_carousel_hash(input_text, json_value.sample(10))
     end
