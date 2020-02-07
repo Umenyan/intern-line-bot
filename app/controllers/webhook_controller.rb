@@ -137,9 +137,8 @@ class WebhookController < ApplicationController
 
   # LINEのAPIの画像カルーセルテンプレートに渡す画像情報(カラム)の配列をBingのAPIから返されたJSONに基づいて生成
   def generate_line_image_carousel_columns_array(json, input_text)
-    image_carousel_columns = Array.new
-    for value in json
-      image_carousel_columns.push(generate_line_image_carousel_columns_hash(value, input_text))
+    image_carousel_columns  = json.map do |value|
+      generate_line_image_carousel_columns_hash(value, input_text)
     end
     return image_carousel_columns
   end
