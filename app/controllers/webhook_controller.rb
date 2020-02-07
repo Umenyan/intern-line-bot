@@ -30,8 +30,6 @@ class WebhookController < ApplicationController
         when Line::Bot::Event::MessageType::Text
           input_text = event.message['text'].downcase
           responce = client.reply_message(event['replyToken'], generate_line_massage_array(input_text))
-          p responce.message
-          p JSON.parse(responce.body)
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
           response = client.get_message_content(event.message['id'])
           tf = Tempfile.open("content")
@@ -143,7 +141,6 @@ class WebhookController < ApplicationController
     for value in json
       image_carousel_columns.push(generate_line_image_carousel_columns_hash(value, input_text))
     end
-    puts image_carousel_columns
     return image_carousel_columns
   end
 
