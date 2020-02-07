@@ -52,23 +52,7 @@ class LineService
     }
   end
 
-  # Bing Image Searsh APIを叩き、bodyをパースして返す
-  def call_bing_image_search_api(input_text)
-    uri  = "https://api.cognitive.microsoft.com"
-    path = "/bing/v7.0/images/search"
-    
-    uri = URI("#{uri}#{path}?q=#{URI.escape(input_text)}")
-    
-    request = Net::HTTP::Get.new(uri)
-    request['Ocp-Apim-Subscription-Key'] = ENV["BING_IMAGE_API_KEY"]
-
-    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
-        http.request(request)
-    end
-
-    return JSON.parse(response.body)
-  end
-
+  
   # BingのAPIから返ってきたJSONのvaluesからLINEのAPIで画像を送るためのハッシュを生成
   def generate_line_image_hash(json)
     random_result = json.sample
@@ -102,7 +86,7 @@ class LineService
 
   # LINEのAPIに渡すリプライ用のメッセージの配列
   def generate_line_massage_array(input_text)
-    json_value = call_bing_image_search_api(input_text)["value"]
+    json_value = BingClient.search_images(input_text)
     if json_value.blank?
       return [generate_line_text_hash_when_image_not_found(input_text), generate_line_sticker_hash(11539, 52114110)]
     else
