@@ -52,21 +52,6 @@ class LineService
     }
   end
 
-  
-  # BingのAPIから返ってきたJSONのvaluesからLINEのAPIで画像を送るためのハッシュを生成
-  def generate_line_image_hash(json)
-    random_result = json.sample
-    
-    original_content_url = random_result["contentUrl"]
-    preview_image_url = random_result["thumbnailUrl"]
-
-    return {
-      type: 'image',
-      originalContentUrl: replace_to_https(original_content_url),
-      previewImageUrl: replace_to_https(preview_image_url) + "&c=4&w=240&h=240" # LINEの画像メッセージのサムネイルのサイズ上限に丸め込む
-    }
-  end
-
   # BingのAPIから画像が返って来なかった場合のメッセージ送信
   def generate_line_text_hash_when_image_not_found(input_text)
     return {
