@@ -29,11 +29,13 @@ class WebhookController < ApplicationController
         case event.type
         when Line::Bot::Event::MessageType::Text
           input_text = event.message['text'].downcase
-          responce = client.reply_message(event['replyToken'], generate_line_massage_array(input_text))
-        when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
-          response = client.get_message_content(event.message['id'])
-          tf = Tempfile.open("content")
-          tf.write(response.body)
+          client.reply_message(event['replyToken'], generate_line_massage_array(input_text))
+        else
+          message = {
+            type: 'text',
+            text: "テキストメッセージにしかお返事できないんだ #{0x100018.chr('UTF-8')} \nごめんね #{0x100029.chr('UTF-8')}#{0x100029.chr('UTF-8')} \nテキストでどうぶつの名前を入れてみて#{0x10005F.chr('UTF-8')}"
+          }
+          client.reply_message(event['replyToken'], message)
         end
       end
     }
