@@ -25,6 +25,7 @@ class WebhookController < ApplicationController
     events.each { |event|
       case event
       when Line::Bot::Event::Message
+        #テキストメッセージなら画像を返し、そうでなければ再入力を促す
         case event.type
         when Line::Bot::Event::MessageType::Text
           input_text = event.message['text'].downcase
@@ -41,6 +42,7 @@ class WebhookController < ApplicationController
     head :ok
   end
 
+  #入力されたテキストに応じて鳴き声のようなものを生成
   def generate_message(input_text)
     case input_text
     when "ねこ", "猫", "ネコ", "neko","cat"
@@ -52,6 +54,7 @@ class WebhookController < ApplicationController
     end
   end
 
+  # LINEのAPIで鳴き声のようなものを返すためのハッシュを生成
   def generate_line_text_hash(input_text)
     return {
       type: 'text',
@@ -59,6 +62,7 @@ class WebhookController < ApplicationController
     }
   end
 
+  # Bing Image Searsh APIを叩き、bodyをパースして返す
   def call_bing_image_search_api(input_text)
     uri  = "https://api.cognitive.microsoft.com"
     path = "/bing/v7.0/images/search"
@@ -75,6 +79,7 @@ class WebhookController < ApplicationController
     return JSON.parse(response.body)
   end
 
+  # BingのAPIから返ってきたJSONのvaluesからLINEのAPIで画像を送るためのハッシュを生成
   def generate_line_image_hash(json)
     random_result = json.sample
     
@@ -84,10 +89,11 @@ class WebhookController < ApplicationController
     return {
       type: 'image',
       originalContentUrl: replace_to_https(original_content_url),
-      previewImageUrl: replace_to_https(preview_image_url) + "&c=4&w=240&h=240"
+      previewImageUrl: replace_to_https(preview_image_url) + "&c=4&w=240&h=240" # LINEの画像メッセージのサムネイルのサイズ上限に丸め込む
     }
   end
 
+  # BingのAPIから画像が返って来なかった場合のメッセージ送信
   def generate_line_text_hash_when_image_not_found(input_text)
     return {
         type: 'text',
@@ -95,6 +101,7 @@ class WebhookController < ApplicationController
       }
   end
 
+  # LINE APIでスタンプを送るためのハッシュを生成
   def generate_line_sticker_hash(packageId, stickerId)
     return{
       type: 'sticker',
@@ -103,6 +110,7 @@ class WebhookController < ApplicationController
     }
   end
 
+  # LINEのAPIに渡すリプライ用のメッセージの配列
   def generate_line_massage_array(input_text)
     json_value = call_bing_image_search_api(input_text)["value"]
     if json_value.blank?
@@ -112,13 +120,15 @@ class WebhookController < ApplicationController
     end
   end
 
+  # httpをhttpsに書き換えるだけのもの
   def replace_to_https(url)
     return url.sub(/http:/, "https:")
   end
 
+  # LINEのAPIの画像カルーセルテンプレートに渡す画像情報(カラム)のハッシュを生成
   def generate_line_image_carousel_columns_hash(json, input_text)
     return {
-      imageUrl: replace_to_https(json["thumbnailUrl"]) + "&c=4&w=240&h=240",
+      imageUrl: replace_to_https(json["thumbnailUrl"]) + "&c=4&w=240&h=240", # LINEの画像カルーセルは1:1比しか受け付けてくれない 
       action: {
         type: "uri",
         label: generate_message(input_text),
@@ -127,6 +137,7 @@ class WebhookController < ApplicationController
     }
   end
 
+  # LINEのAPIの画像カルーセルテンプレートに渡す画像情報(カラム)の配列をBingのAPIから返されたJSONに基づいて生成
   def generate_line_image_carousel_columns_array(json, input_text)
     image_carousel_columns = Array.new
     for value in json
@@ -136,6 +147,7 @@ class WebhookController < ApplicationController
     return image_carousel_columns
   end
 
+  # LINEのAPIに画像カルーセルを渡すためのハッシュを生成
   def generate_line_image_carousel_hash(input_text, json)
     return {
       type: 'template',
