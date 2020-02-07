@@ -3,7 +3,7 @@ require 'net/https'
 require 'uri'
 require 'json'
 
-class WebhookController < ApplicationController
+class LineWebhookController < ApplicationController
   protect_from_forgery except: [:callback] # CSRF対策無効化
 
   def client
