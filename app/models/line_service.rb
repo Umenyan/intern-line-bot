@@ -86,11 +86,11 @@ class LineService
 
   # LINEのAPIに渡すリプライ用のメッセージの配列
   def generate_line_massage_array(input_text)
-    json_value = BingClient.search_images(input_text)
-    if json_value.blank?
+    bing_clients = BingClient.search_images(input_text)
+    if bing_clients.blank?
       return [generate_line_text_hash_when_image_not_found(input_text), generate_line_sticker_hash(11539, 52114110)]
     else
-      return generate_line_image_carousel_hash(input_text, json_value.sample(10))
+      return generate_line_image_carousel_hash(input_text, bing_clients.sample(10))
     end
   end
 
@@ -100,13 +100,13 @@ class LineService
   end
 
   # LINEのAPIの画像カルーセルテンプレートに渡す画像情報(カラム)のハッシュを生成
-  def generate_line_image_carousel_columns_hash(json, input_text)
+  def generate_line_image_carousel_columns_hash(bing_client, input_text)
     return {
-      imageUrl: replace_to_https(json["thumbnailUrl"]) + "&c=4&w=240&h=240", # LINEの画像カルーセルは1:1比しか受け付けてくれない 
+      imageUrl: replace_to_https(bing_client.thumbnail_url) + "&c=4&w=240&h=240", # LINEの画像カルーセルは1:1比しか受け付けてくれない 
       action: {
         type: "uri",
         label: generate_message(input_text),
-        uri: json["hostPageUrl"]
+        uri: bing_client.host_page_url
       }
     }
   end

@@ -1,4 +1,10 @@
 class BingClient
+  attr_accessor :result
+
+  def initialize(result)
+    self.result = result
+  end
+
   # Bing Image Searsh APIを叩き、bodyをパースして返す
   def self.search_images(input_text)
     uri  = "https://api.cognitive.microsoft.com"
@@ -13,7 +19,16 @@ class BingClient
         http.request(request)
     end
 
-    return JSON.parse(response.body)["value"]
+    JSON.parse(response.body)["value"].map do |result|
+      BingClient.new(result)
+    end
   end
 
+  def thumbnail_url
+    self.result["thumbnailUrl"]
+  end
+
+  def host_page_url
+    self.result["hostPageUrl"]
+  end
 end
