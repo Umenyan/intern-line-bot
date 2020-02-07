@@ -1,4 +1,8 @@
 class LineService
+  def validate_signature(body, signature)
+    client.validate_signature(body, signature)
+  end
+
   def call(body)
     events = client.parse_events_from(body)
     events.each { |event|
